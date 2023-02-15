@@ -5,10 +5,9 @@ export const ImageGalleryItem = ({ id, onClick, webUrl, alt, largeUrl }) => {
     <>
       <li
         className="ImageGalleryItem"
-        id={id}
-        onClick={event => {
+        onClick={() => {
           const dataImage = {
-            id: event.currentTarget.id,
+            id: id, //або event.currentTarget.id
             url: largeUrl,
             description: alt,
           };
