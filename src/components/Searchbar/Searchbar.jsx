@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 export class Searchbar extends Component {
   static propTypes = {
     onSubmit: PropTypes.func.isRequired,
+    isDisabled: PropTypes.bool.isRequired,
   };
 
   state = {
@@ -30,6 +31,7 @@ export class Searchbar extends Component {
           </button>
 
           <input
+            disabled={this.props.isDisabled}
             onChange={this.handleChange}
             name="query"
             value={this.state.query}

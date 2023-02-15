@@ -73,7 +73,7 @@ export class App extends Component {
     return (
       <div className="App">
         {isLoading && <Loader />}
-        <Searchbar onSubmit={this.getQuery} />
+        <Searchbar onSubmit={this.getQuery} isDisabled={isLoading} />
         {images.length > 0 ? (
           <ImageGallery onClick={this.openModal} images={images} />
         ) : (
