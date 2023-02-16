@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchImagesByQuery } from '../services/api';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -6,88 +6,84 @@ import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 
-export class App extends Component {
-  state = {
-    images: [],
-    page: 1,
-    query: '',
-    error: null,
-    showLoadMore: false,
-    isLoading: false,
-    showModal: false,
-    dataImage: {
-      id: '',
-      url: '',
-      description: '',
-    },
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [error, setError] = useState(null);
+  const [showLoadMore, setShowLoadMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [dataImage, setDataImage] = useState({
+    id: '',
+    url: '',
+    description: '',
+  });
 
-  async componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ isLoading: true });
+  useEffect(() => {
+    const fetchImages = async () => {
+      setIsLoading(true);
+
       try {
         const { hits, totalHits } = await fetchImagesByQuery(query, page);
-        // console.log(hits);
-        this.setState(prevState => ({
-          images: [...prevState.images, ...hits],
-          showLoadMore: page < Math.ceil(totalHits / 15),
-        }));
+        setImages(prevState => [...prevState, ...hits]);
+        setShowLoadMore(page < Math.ceil(totalHits / 15));
       } catch (error) {
+        setError(error.message);
         console.log(error);
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
+    };
+
+    if (query === '') {
+      return;
     }
-  }
 
-  getQuery = query => {
-    this.setState({
-      query,
-      images: [],
-      page: 1,
-      error: null,
-      showLoadMore: false,
-    });
+    fetchImages();
+  }, [page, query]);
+
+  const getQuery = query => {
+    setQuery(query);
+    setImages([]);
+    setPage(1);
+    setError(null);
+    setShowLoadMore(false);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const handleLoadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  openModal = data => {
-    // console.log(data);
-    this.setState({
-      showModal: true,
-      dataImage: data,
-    });
+  const openModal = data => {
+    setShowModal(true);
+    setDataImage(data);
   };
-  closeModal = () => {
-    this.setState({ showModal: false });
+  const closeModal = () => {
+    setShowModal(false);
   };
 
-  render() {
-    const { isLoading, showLoadMore, showModal, images, dataImage } =
-      this.state;
-    return (
-      <div className="App">
-        {isLoading && <Loader />}
-        <Searchbar onSubmit={this.getQuery} isDisabled={isLoading} />
-        {images.length > 0 ? (
-          <ImageGallery onClick={this.openModal} images={images} />
-        ) : (
-          <p>Enter your request</p>
-        )}
-        {showLoadMore && <Button onClick={this.handleLoadMore} />}
+  return (
+    <div className="App">
+      {isLoading && <Loader />}
+      <Searchbar onSubmit={getQuery} isDisabled={isLoading} />
 
-        {showModal && (
-          <Modal
-            url={dataImage.url}
-            description={dataImage.description}
-            onClose={this.closeModal}
-          />
-        )}
-      </div>
-    );
-  }
-}
+      {error !== null && <p>Oops, some error occured... Message: {error}</p>}
+
+      {images.length > 0 ? (
+        <ImageGallery onClick={openModal} images={images} />
+      ) : (
+        <p>Enter your request</p>
+      )}
+      {showLoadMore && <Button onClick={handleLoadMore} />}
+
+      {showModal && (
+        <Modal
+          url={dataImage.url}
+          description={dataImage.description}
+          onClose={closeModal}
+        />
+      )}
+    </div>
+  );
+};
